@@ -1,0 +1,11 @@
+*.pyc
+dist
+build
+test
+doc/_build
+doc/_static
+doc/_template
+.coverage
+.env3/
+.pytest_cache/
+container.*
