@@ -12,7 +12,10 @@ class Cell(object):
     # cell type, defines starting point of container type
     cell = None
 
-    def __init__(self, required=False):
+    def __init__(self, required=False, meta={}):
+        # contains additional descriptive data
+        self.meta = meta
+
         self.required = required
         self._value = None
         self._type = None
@@ -36,8 +39,8 @@ class Cell(object):
 
 
 class Any(Cell):
-    def __init__(self, required=False):
-        super(Any, self).__init__(required)
+    def __init__(self, required=False, meta={}):
+        super(Any, self).__init__(required, meta)
         self._type = "any"
 
     def get(self):
@@ -50,8 +53,8 @@ class Any(Cell):
 class Dictionary(Cell):
     cell = dict()
 
-    def __init__(self, required=False):
-        super(Dictionary, self).__init__(required)
+    def __init__(self, required=False, meta={}):
+        super(Dictionary, self).__init__(required, meta)
         self._type = "dict"
 
     def __getitem__(self, key):
@@ -77,8 +80,8 @@ class Dictionary(Cell):
 class Array(Cell):
     cell = list()
 
-    def __init__(self, required=False, base_type=None):
-        super(Array, self).__init__(required)
+    def __init__(self, required=False, base_type=None, meta={}):
+        super(Array, self).__init__(required, meta)
         self.base_type = base_type
         self._type = "array"
 
@@ -116,8 +119,11 @@ class Array(Cell):
 class Value(Cell):
     types = {"float", "int", "str", "bool"}
 
-    def __init__(self, type_name, strict=True, allowed=None, required=False):
-        super(Value, self).__init__(required)
+    def __init__(
+            self, type_name, strict=True,
+            allowed=None, required=False, meta={}
+            ):
+        super(Value, self).__init__(required, meta)
         # self._value = None
         self.strict = strict
         self._type = self.__check_type(type_name)
@@ -126,8 +132,8 @@ class Value(Cell):
     # def __str__(self):
         # return "<Value v:{0}, t:{1}>".format(self._value, self.type)
 
-    def __repr__(self):
-        return str(self.value)
+    # def __repr__(self):
+    #     return str(self.value)
 
     def parse_float(self, val):
         try:
@@ -219,10 +225,15 @@ class Container(object):
     # def_key_name = "name"
     # def_val_name = "value"
 
-    def __init__(self, key_name=None, val_name=None, required=False, strict=True):
+    def __init__(
+            self, key_name=None, val_name=None,
+            required=False, strict=True, meta={}
+            ):
+        self.meta = {}
+        self._type = "container"
+
         self.required = required
         self.strict = strict
-        self._type = "container"
 
         if self.__class__.body:
             self._value = dict()
@@ -302,17 +313,26 @@ class Container(object):
         if features:
             return features
 
-#     @property
-#     def keyval(self):
-#         res = list()
-#         for key, val in self.value.items():
-#             r = {self.def_key_name: key, self.def_val_name: val}
-# # 
-#             res.append(r)
+    def meta_search(self, meta_name, logic, value):
+        """Find fields by meta key value"""
 
-        # keyval = [{self.def_key_name: key, self.def_val_name: val} for key, val in self.features.items()]
+        res = list()
+        for field_name in self._value:
+            field = self._value[field_name]
+            if field.type == "container":
+                sub_cont_res = field.meta_search(meta_name, logic, value)
+                res.extend(sub_cont_res)
+            else:
+                meta_value = field.meta.get(meta_name)
+                if meta_value is not None:
+                    if logic == "eq":
+                        if meta_value == value:
+                            res.append(field)
+                    else:
+                        print("[container]Don't know such logic value: {}".format(logic))
 
         return res
+
 
     @property
     def schema(self):
@@ -341,3 +361,20 @@ class Container(object):
     def __repr__(self):
         return pformat(self._value)
 
+if __name__ == "__main__":
+    class Cont(Container):
+        body = {
+            "a": Value("int", meta={"edit": True})
+        }
+
+    class Cont2(Container):
+        body = {
+            "a": Value("int", meta={"edit": True}),
+            "b": Value("int", meta={"edit": False}),
+            "c": Value("int", meta={"edit": True}),
+            "d": Cont()
+        }
+
+    c = Cont2()
+    res = c.meta_search("edit", "eq", True)
+    print(res)

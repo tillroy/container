@@ -6,7 +6,7 @@ from container import exc
 
 class Cont(Container):
     body = {
-        "a": Value("int")
+        "a": Value("int", meta={"edit": True})
     }
 
 
@@ -15,6 +15,14 @@ class Cont1(Container):
         "a": Value("int"),
         "b": Cont()
         }
+
+
+class Cont2(Container):
+    body = {
+        "a": Value("int", meta={"edit": True}),
+        "b": Value("int", meta={"edit": False}),
+        "c": Value("int", meta={"edit": True})
+    }
 
 
 _body = {
@@ -157,24 +165,8 @@ def test_shema1():
     assert Cont1().schema == {'b': {'a': 'int'}, 'a': 'int'}
     assert Cont().schema == {'a': 'int'}
 
-# def test_schema2(cont):
-#     dest_schema = [
-#         {"name": "v1", "type": "int"},
-#         {"name": "v2", "type": "float"},
-#         {"name": "v3", "type": "bool"},
-#         {"name": "v4", "type": "str"},
-#         {"name": "a1", "type": "any"},
-#         {"name": "a2", "type": "any"},
-#         {"name": "r1", "type": "array"},
-#         {"name": "d1", "type": "dict"},
-#         {"name": "c1", "type": "container"}
-#         ]
-
-#     assert len(dest_schema) == len(cont.schema)
-#     assert all([el in cont.schema for el in dest_schema])
-
-
-# def test_keyval():
-#     c = Cont()
-#     c["a"] = 1
-#     print(c.keyval)
+def test_meta_search():
+    c = Cont2()
+    print(c._value["a"])
+    res = c.meta_search("edit", "eq", True)
+    print(res)
