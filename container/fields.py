@@ -238,7 +238,8 @@ class Container(object):
         if self.__class__.body:
             self._value = dict()
             for key, val in self.__class__.body.items():
-                val.meta["name"] = key
+                val.meta["__name"] = key
+                val.meta["__parent"] = self
                 self._value[key] = copy.deepcopy(val)
         else:
             self._value = dict()
@@ -378,5 +379,5 @@ if __name__ == "__main__":
 
     c = Cont2()
     # res = c.meta_search("edit", "eq", True)
-    res = c.meta_search("name", "eq", "c")
-    print([r.meta.get("name") for r in res])
+    res = c.meta_search("__name", "eq", "a")
+    print([r.meta.get("__name") for r in res])
