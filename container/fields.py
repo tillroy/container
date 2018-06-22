@@ -4,6 +4,7 @@ import copy
 import ujson
 
 from container import exc
+from container.rule import Rule
 
 
 class Cell(object):
@@ -222,6 +223,7 @@ class Value(Cell):
 
 class Container(object):
     body = None
+    rules = None
     # def_key_name = "name"
     # def_val_name = "value"
 
@@ -243,6 +245,15 @@ class Container(object):
                 self._value[key] = copy.deepcopy(val)
         else:
             self._value = dict()
+
+        if self.__class__.rules:
+            self._rules = list()
+            for el in self.__class__.rules:
+                self._rules.append(el)
+
+                # self._rules[key] = copy.deepcopy(val)
+        else:
+            self._rules = tuple()
 
         # if key_name:
         #     self.def_key_name = key_name
@@ -316,6 +327,8 @@ class Container(object):
             elif value is None and required:
                 if self.strict:
                     raise exc.RequiredField("Field '{}' is required for container '{}'".format(key, self.__class__.__name__))
+        if self.strict:
+            self.use_rules()
 
         if features:
             return features
@@ -340,6 +353,24 @@ class Container(object):
 
         return res
 
+    def path(self, name):
+        name_chain = name.split(".")
+        if name_chain:
+            first_el_name = name_chain.pop(0)
+            rest_name = ".".join(name_chain)
+
+            first_el = self._value.get(first_el_name)
+            if first_el is not None:
+                if first_el.type == "container" and rest_name != "":
+                    return first_el.path(rest_name)
+                else:
+                    return first_el
+
+    def use_rules(self):
+        if self._rules:
+            for rule in self._rules:
+                rule.set_cont(self)
+                print(rule.use())
 
     @property
     def schema(self):
@@ -371,7 +402,8 @@ class Container(object):
 if __name__ == "__main__":
     class Cont(Container):
         body = {
-            "a": Value("int", meta={"edit": True})
+            "a": Value("int", meta={"edit": True}),
+            "b": Value("int", meta={"edit": True})
         }
 
     class Cont2(Container):
@@ -382,10 +414,24 @@ if __name__ == "__main__":
             "d": Cont()
         }
 
+        rules = (
+            Rule(cell1="a", do="lt", cell2="d.b"),
+            )
+
     c = Cont2()
+    c["a"] = 20
+    c["b"] = 10
+    c["c"] = 11
+    c["d"]["a"] = 1
+    c["d"]["b"] = 12
+
     # res = c.meta_search("edit", "eq", True)
     res = c.meta_search("__name", "eq", "a")
     print(res)
+
+    res1 = c.path("d.b")
+    print(c.value)
+    # c.use_rules()
     # b = res[0].meta["__parent"]._value["b"].meta["__name"] = "a"
     # print(b)
     # print(res[0].meta["__parent"]._value["b"])
