@@ -305,10 +305,15 @@ class Container(object):
     def value(self):
         features = dict()
         for key, val in self._value.items():
-            value = val.value
+            required = val.required
+            try:
+                value = val.value
+            except (exc.IntError, exc.FloatError, exc.ForbiddenValue) as e:
+                value = None
+
             if value is not None:
-                features[key] = val.value
-            elif value is None and val.required:
+                features[key] = value
+            elif value is None and required:
                 if self.strict:
                     raise exc.RequiredField("Field '{}' is required for container '{}'".format(key, self.__class__.__name__))
 
@@ -357,11 +362,11 @@ class Container(object):
     def json(self):
         return ujson.dumps(self.value)
 
-    def __str__(self):
-        return pformat(self._value)
+    # def __str__(self):
+    #     return pformat(self._value)
 
-    def __repr__(self):
-        return pformat(self._value)
+    # def __repr__(self):
+    #     return pformat(self._value)
 
 if __name__ == "__main__":
     class Cont(Container):
@@ -380,4 +385,11 @@ if __name__ == "__main__":
     c = Cont2()
     # res = c.meta_search("edit", "eq", True)
     res = c.meta_search("__name", "eq", "a")
-    print([r.meta.get("__name") for r in res])
+    print(res)
+    # b = res[0].meta["__parent"]._value["b"].meta["__name"] = "a"
+    # print(b)
+    # print(res[0].meta["__parent"]._value["b"])
+    # res[0].meta["__parent"]._value["b"].meta["__name"] = "a"
+    # print([r.meta.get("__name") for r in res])
+    # res2 = c.meta_search("__name", "eq", "a")
+    # print([r.meta.get("__name") for r in res2])
