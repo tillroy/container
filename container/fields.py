@@ -307,7 +307,8 @@ class Container(object):
                 field.populate(dictionary[fname])
             else:
                 # print(fname, type(field))
-                field.set(dictionary[fname])
+                if field is not None:
+                    field.set(dictionary[fname])
             # data = dictionary[fname]
             # dest = self._values.get(fname)
             # assert isinstance(dest, (Value, Any)), "Cant populate complex type {} yet".format(type(dest))
@@ -421,24 +422,22 @@ if __name__ == "__main__":
             Rule(cell1="a", do="lt", cell2="d.b"),
             )
 
-    c = Cont2(strict=False)
-    c["a"] = 20
-    c["b"] = 10
-    c["c"] = 11
-    c["d"]["a"] = 1
-    # c["d"]["b"] = 12
+    # c = Cont2(strict=False)
+    # c["a"] = 20
+    # c["b"] = 10
+    # c["c"] = 11
+    # c["d"]["a"] = 1
+    # # c["d"]["b"] = 12
 
-    # res = c.meta_search("edit", "eq", True)
-    res = c.meta_search("__name", "eq", "a")
-    print(res)
+    # # res = c.meta_search("edit", "eq", True)
+    # res = c.meta_search("__name", "eq", "a")
+    # print(res)
 
-    res1 = c.path("d.b")
-    print(c.value)
-    # c.use_rules()
-    # b = res[0].meta["__parent"]._value["b"].meta["__name"] = "a"
-    # print(b)
-    # print(res[0].meta["__parent"]._value["b"])
-    # res[0].meta["__parent"]._value["b"].meta["__name"] = "a"
-    # print([r.meta.get("__name") for r in res])
-    # res2 = c.meta_search("__name", "eq", "a")
-    # print([r.meta.get("__name") for r in res2])
+    # res1 = c.path("d.b")
+
+
+    c1 = Cont(strict=False)
+
+    c1.populate({"a1": 1, "a": 2})
+
+    print(c1.value)
