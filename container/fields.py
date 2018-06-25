@@ -242,6 +242,9 @@ class Container(object):
             for key, val in self.__class__.body.items():
                 val.meta["__name"] = key
                 val.meta["__parent"] = self
+                if isinstance(val, Container):
+                    print(val)
+                    val.strict = self.strict
                 self._value[key] = copy.deepcopy(val)
         else:
             self._value = dict()
@@ -403,7 +406,7 @@ if __name__ == "__main__":
     class Cont(Container):
         body = {
             "a": Value("int", meta={"edit": True}),
-            "b": Value("int", meta={"edit": True})
+            "b": Value("int", meta={"edit": True}, required=True)
         }
 
     class Cont2(Container):
@@ -418,12 +421,12 @@ if __name__ == "__main__":
             Rule(cell1="a", do="lt", cell2="d.b"),
             )
 
-    c = Cont2()
+    c = Cont2(strict=False)
     c["a"] = 20
     c["b"] = 10
     c["c"] = 11
     c["d"]["a"] = 1
-    c["d"]["b"] = 12
+    # c["d"]["b"] = 12
 
     # res = c.meta_search("edit", "eq", True)
     res = c.meta_search("__name", "eq", "a")
