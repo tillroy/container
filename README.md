@@ -28,7 +28,7 @@ Fill container data
 ```python
 c = Cont(strict=False)
 
-c.populate({"a1": 1, "a": 2})
+c.populate({"a": 1, "b": "22,5"})
 ```
 
 Show data
@@ -36,7 +36,7 @@ Show data
 ```python
 print(c.value)
 
-{'b': 2, 'a': 1}
+{'b': 22.5, 'a': 1}
 ```
 
 ```python
