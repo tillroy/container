@@ -410,7 +410,7 @@ if __name__ == "__main__":
             "b": Value("int", meta={"edit": True}, required=True)
         }
 
-    class Cont2(Container):
+    class Cont1(Container):
         body = {
             "a": Value("int", meta={"edit": True}),
             "b": Value("int", meta={"edit": False}),
@@ -436,8 +436,14 @@ if __name__ == "__main__":
     # res1 = c.path("d.b")
 
 
-    c1 = Cont(strict=False)
+    # c1 = Cont(strict=False)
 
-    c1.populate({"a1": 1, "a": 2})
+    # c1.populate({"a": 1, "b": "2"})
+
+    # print(c1.value)
+
+    c1 = Cont1()
+    c1["a"] = 100
+    c1["d"]["b"] = "22,5"
 
     print(c1.value)

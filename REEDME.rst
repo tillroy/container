@@ -1,7 +1,6 @@
 =========
 Container
 =========
-Container is a small library which helps kepp hiarahical data, restrict types and coeerse them.
+Container is a small library which helps keep hierarchical data, restrict types and courser them.
 
-The main aim of the library - working with nested data containers and define it's types.
-It could be used to any JSON-like data structure and 
+The main aim of the library - working with nested data containers and define it's types. Also it is possible to use simple rules to each field of container instance
