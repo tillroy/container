@@ -45,7 +45,7 @@ c1["a"] = 100
 c1["d"]["b"] = "22,5"
 ```
 
-Rise as exception
+Raise as exception
 ```
 Traceback (most recent call last):
   File "/mnt/hdd/myprojects/container/container/fields.py", line 449, in <module>
