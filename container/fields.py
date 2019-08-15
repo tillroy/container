@@ -317,13 +317,37 @@ class Container(object):
         return self
 
     @property
-    def value(self):
+    def value_old(self):
         features = dict()
         for key, val in self._value.items():
             required = val.required
             try:
                 value = val.value
             except (exc.IntError, exc.FloatError, exc.ForbiddenValue) as e:
+                value = None
+
+            if value is not None:
+                features[key] = value
+            elif value is None and required:
+                if self.strict:
+                    raise exc.RequiredField("Field '{}' is required for container '{}'".format(key, self.__class__.__name__))
+        if self.strict:
+            self.use_rules()
+
+        if features:
+            return features
+
+    @property
+    def value(self):
+        features = dict()
+        for key, val in self._value.items():
+            required = val.required
+            try:
+                value = val.value
+            # FIXME: use spevific type for type coersion error
+            except (exc.IntError, exc.FloatError, exc.ForbiddenValue) as e:
+                if self.strict and required:
+                    raise e
                 value = None
 
             if value is not None:

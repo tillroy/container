@@ -144,6 +144,27 @@ def test_required_container(cont):
         cont.value
 
 
+def test_strict_container(cont):
+    data = {
+        # should be integer
+        "v1": "dsa",
+        "v2": 1,
+        "v3": 1,
+        "v4": "1",
+        "a1": [1, 2, 3],
+        "a2": {"a": 1},
+
+        "c1": {"a": 20}
+        }
+
+    c = C()
+    c["v1"].required = True
+    c.populate(data)
+
+    with pytest.raises(exc.IntError):
+        c.value
+
+
 def test_empty_fields(cont):
     cont["v1"] = 0
     cont["v2"] = 0.
@@ -161,7 +182,7 @@ def test_empty_fields(cont):
     assert cont.value == {"v1": 0, "v2": 0.0, "v4": "", "a1": dict(), "a2": list()}
 
 
-def test_shema1():
+def test_schema():
     assert Cont1().schema == {'b': {'a': 'int'}, 'a': 'int'}
     assert Cont().schema == {'a': 'int'}
 
