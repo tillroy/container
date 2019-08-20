@@ -1,5 +1,6 @@
 from pprint import pformat
 import copy
+import re
 
 import ujson
 
@@ -88,26 +89,17 @@ class Dictionary(Cell):
 class Array(Cell):
     cell = list()
 
-    def __init__(self, required=False, base_type=None, strict=True, meta={}):
+    # TODO: make strict defined at Cell level
+    def __init__(self, base_type, required=False, strict=True, meta={}):
         super(Array, self).__init__(required, meta)
         self.base_type = base_type
         self.base_type.strict = strict
         self.strict = strict
         self.type = "array"
-        # self._type = "array"
 
     def __getitem__(self, ind):
         val = self._value[ind]
         return val.value
-        # if self.base_type is not None:
-        #     if isinstance(val, self.base_type):
-        #         return val
-        #     else:
-        #         if self.strict:
-        #             raise exc.WrongFieldType("Field type is not allowed: {}".format(type(val)))
-        #         return None
-        # else:
-        #     return self._value[ind]
 
     @property
     def base_type(self):
@@ -132,7 +124,9 @@ class Array(Cell):
     def get(self):
         res = list()
         for el in self._value:
-            res.append(el.value)
+            val = el.value
+            if val is not None:
+                res.append(val)
 
         if res:
             return res
@@ -157,51 +151,51 @@ class Value(Cell):
     # def __repr__(self):
     #     return str(self.value)
 
+    def exclude_bool_val(self, val):
+        if val is True or val is False:
+            if self.strict:
+                raise Exception
+
     def parse_float(self, val):
         try:
-            if isinstance(val, bool):
-                raise Exception
-            elif isinstance(val, float):
-                return val
-            elif isinstance(val, int):
-                return float(val)
-            elif isinstance(val, str):
-                if "," in val:
-                    val = val.replace(",", ".")
-
-                val = float(val)
-
-                return val
+            new_val = self.coerse_num(val)
+            # ommit boolean input
+            self.exclude_bool_val(val)
+            return new_val
+            
 
         except Exception as e:
             if self.strict:
-                raise exc.FloatError("Can't convert to float, input value: {}".format(val))
+                raise exc.FloatError("Can't convert to float, input value: {}[{}]".format(val, type(val)))
             else:
                 self.is_valid = False
-                return None
 
     def parse_bool(self, val):
         return bool(val)
 
+    def coerse_num(self, val):
+        """Try to conver any input to float number"""
+        if isinstance(val, (int, bool, float)):
+            return float(val)
+        elif isinstance(val, str):
+            if "," in val:
+                val = val.replace(",", ".")
+            return float(val)
+
     def parse_int(self, val):
         try:
-            if isinstance(val, int):
-                return val
-            elif isinstance(val, float):
-                return int(val)
-            elif isinstance(val, str):
-                if "," in val:
-                    val = val.replace(",", ".")
-
-                val = val.split(".")[0]
-                return int(val)
+            new_val = self.coerse_num(val)
+            if new_val != new_val // 1:
+                raise Exception
+            # ommit boolean input
+            self.exclude_bool_val(val)
+            return int(new_val)
 
         except Exception as e:
             if self.strict:
-                raise exc.IntError("Can't convert to int, input value: {}".format(val))
+                raise exc.IntError("Can't convert to int, input value: {}[{}]".format(val, type(val)))
             else:
                 self.is_valid = False
-                return None
 
     def set(self, value):
         self._value = value
