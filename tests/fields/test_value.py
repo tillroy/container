@@ -81,7 +81,7 @@ def test_parse_float_not_srtict_failure():
 
 
 def test_parse_float_success():
-    v = Value(type_name="float")
+    v = Value(type_name="float", strict=False)
     
     res = v.parse_float("2")
     assert res == 2.0
@@ -110,6 +110,11 @@ def test_parse_float_success():
     res = v.parse_float(2.0)
     assert res == 2.0
 
+    res = v.parse_float(True)
+    assert res == 1.0
+
+    res = v.parse_float(False)
+    assert res == 0.0
 
 def test_return_none():
     v = Value(type_name="float")
@@ -133,28 +138,34 @@ def test_parse_int_not_srtict_failure():
 
 
 def test_parse_int_success():
-    v = Value(type_name="int")
+    v = Value(type_name="int", strict=False)
     
     res = v.parse_int("1")
     assert res == 1
 
-    res = v.parse_int("1.1")
+    res = v.parse_int("1.0")
     assert res == 1
 
     res = v.parse_int("1,1")
-    assert res == 1
+    assert res == None
 
     res = v.parse_int("1,a")
-    assert res == 1
+    assert res == None
 
     res = v.parse_int("1.a")
+    assert res == None
+
+    res = v.parse_int(True)
     assert res == 1
+
+    res = v.parse_int(False)
+    assert res == 0
 
     res = v.parse_int(1)
     assert res == 1
 
     res = v.parse_int(1.2)
-    assert res == 1
+    assert res == None
 
 
 def test_is_allowed_failure():
@@ -163,6 +174,21 @@ def test_is_allowed_failure():
     with pytest.raises(exc.ForbiddenValue):
         v.set(5)
         v.value
+
+def test_value_failure_1():
+    v = Value(type_name="int", strict=True)
+
+    with pytest.raises(exc.IntError):
+        v.set(5.1)
+        v.value
+
+def test_value_failure_2():
+    v = Value(type_name="int", strict=True)
+
+    with pytest.raises(exc.IntError):
+        v.set("5.1")
+        v.value
+
 
 
 def test_is_allowed_not_strict_failure():
@@ -181,15 +207,15 @@ def test_is_allowed():
 
 
 def test_get_all_values():
-    vi = Value("int")
+    vi = Value("int", strict=False)
     assert vi.set("1").value == 1
-    assert vi.set("1.1").value == 1
-    assert vi.set("1,1").value == 1
-    assert vi.set("1,a").value == 1
+    assert vi.set("1.1").value == None
+    assert vi.set("1,1").value == None
+    assert vi.set("1,a").value == None
     assert vi.set("1,").value == 1
     assert vi.set("1.").value == 1
     assert vi.set(1).value == 1
-    assert vi.set(1.3).value == 1
+    assert vi.set(1.3).value == None
     assert vi.set(None).value is None
 
     vf = Value("float")

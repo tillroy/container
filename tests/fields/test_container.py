@@ -32,7 +32,7 @@ _body = {
     "v4": Value("str", required=True),
     "a1": Any(),
     "a2": Any(),
-    "r1": Array(),
+    "r1": Array(Value("int")),
     "d1": Dictionary(),
     "c1": Cont()
     }
