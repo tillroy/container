@@ -24,6 +24,9 @@ class Cell(object):
         if self.__class__.cell is not None:
             self._value = copy.copy(self.__class__.cell)
 
+    def __repr__(self):
+        return "<class '{}'>".format(self.__class__.__name__)
+
     def get(self):
         raise NotImplementedError
 
@@ -33,6 +36,10 @@ class Cell(object):
     @property
     def type(self):
         return self._type
+
+    @type.setter
+    def type(self, val):
+        self._type = val
 
     @property
     def value(self):
@@ -81,22 +88,38 @@ class Dictionary(Cell):
 class Array(Cell):
     cell = list()
 
-    def __init__(self, required=False, base_type=None, meta={}):
+    def __init__(self, required=False, base_type=None, strict=True, meta={}):
         super(Array, self).__init__(required, meta)
         self.base_type = base_type
-        self._type = "array"
+        self.base_type.strict = strict
+        self.strict = strict
+        self.type = "array"
+        # self._type = "array"
 
     def __getitem__(self, ind):
-        if self.base_type is not None:
-            val = self._value[ind]
-            if isinstance(val, self.base_type):
-                return val
-            else:
-                return None
-        else:
-            return self._value[ind]
+        val = self._value[ind]
+        return val.value
+        # if self.base_type is not None:
+        #     if isinstance(val, self.base_type):
+        #         return val
+        #     else:
+        #         if self.strict:
+        #             raise exc.WrongFieldType("Field type is not allowed: {}".format(type(val)))
+        #         return None
+        # else:
+        #     return self._value[ind]
+
+    @property
+    def base_type(self):
+        return self._base_type
+
+    @base_type.setter
+    def base_type(self, val):
+        assert issubclass(val.__class__, Cell), "base_type should be subcalss of 'Cell'"
+        self._base_type = val
 
     def add(self, val):
+        val = copy.copy(self.base_type.set(val))
         self._value.append(val)
 
         return self
@@ -108,10 +131,8 @@ class Array(Cell):
 
     def get(self):
         res = list()
-        for ind in range(len(self._value)):
-            val = self[ind]
-            if val is not None:
-                res.append(val)
+        for el in self._value:
+            res.append(el.value)
 
         if res:
             return res
@@ -466,8 +487,12 @@ if __name__ == "__main__":
 
     # print(c1.value)
 
-    c1 = Cont1()
-    c1["a"] = 100
-    c1["d"]["b"] = "22,5"
+    # c1 = Cont1()
+    # c1["a"] = 100
+    # c1["d"]["b"] = "22,5"
 
-    print(c1.value)
+    # print(c1.value)
+
+    c = Cont(strict=True)
+    c["b"] = "2.5a"
+    print(c.value)
